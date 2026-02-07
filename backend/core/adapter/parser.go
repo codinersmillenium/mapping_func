@@ -2,7 +2,6 @@ package adapter
 
 import (
 	"fmt"
-	"mapping_func/pkg"
 	"strings"
 )
 
@@ -43,18 +42,13 @@ func (u *ParserAdapter) Parse(input string) (string, string, string) {
 			}
 
 			if !isAgeSuffix {
-				c = strings.TrimSpace(strings.ToUpper(tmp))
-				if prov, ok := u.Capitals[c]; ok {
-					c = c + " " + strings.ToUpper(prov)
-				}
-				tmp = ""
-				a = string(char) + a
-			} else {
-				tmp = ""
-				a = string(char) + a
+				c = strings.ToUpper(tmp)
 			}
+			tmp = ""
+			a = string(char) + a
 			continue
 		}
+
 		if a != "" && char == ' ' {
 			hasMoreDigits := false
 			for j := i - 1; j >= 0; j-- {
@@ -78,20 +72,12 @@ func (u *ParserAdapter) Parse(input string) (string, string, string) {
 		}
 	}
 
-	if c == "" && tmp != "" {
-		c = strings.TrimSpace(strings.ToUpper(tmp))
-		if prov, ok := u.Capitals[c]; ok {
-			c = c + " " + strings.ToUpper(prov)
-		}
-		tmp = ""
-	}
-
 	// Phase 2: Parse name
 	if i >= 0 {
 		for j := i; j >= 0; j-- {
 			tmp = string(input[j]) + tmp
 		}
-		n = strings.TrimSpace(strings.ToUpper(tmp))
+		n = strings.ToUpper(tmp)
 	}
 
 	// Validate and format output
@@ -103,77 +89,16 @@ func (u *ParserAdapter) Parse(input string) (string, string, string) {
 	}
 	a = cleanAge
 
-	// Format fixed-width
-	return fmt.Sprintf("%-30.30s", n),
-		fmt.Sprintf("%-3.3s", a),
-		fmt.Sprintf("%-20.20s", c)
-}
-
-func (u *ParserAdapter) ParseOptimized(input string) (string, string, string) {
-	// Variable 1-5: i, tmp, n, a, c
-	var i int = len(input) - 1
-	var tmp string
-	var n, a, c string
-	var inAge bool
-
-	for ; i >= 0; i-- {
-		char := input[i]
-
-		switch {
-		case char >= '0' && char <= '9':
-			if !inAge {
-				inAge = true
-				a = string(char) + a
-
-				if tmp != "" {
-					c = pkg.ProcessCity(tmp, u.Capitals)
-					tmp = ""
-				}
-			} else {
-				a = string(char) + a
-			}
-
-		case char == ' ':
-			if inAge && a != "" {
-				suffix := strings.ToUpper(tmp)
-				if pkg.IsAgeSuffix(suffix) {
-					tmp = ""
-					continue
-				}
-
-				if tmp != "" && c == "" {
-					c = pkg.ProcessCity(tmp, u.Capitals)
-					tmp = ""
-				}
-			}
-			tmp = string(char) + tmp
-
-		default:
-			tmp = string(char) + tmp
-
-			if inAge && a != "" {
-				fmt.Println("-")
-			}
-		}
+	// clean last city
+	replaceWords := []string{"TAHUN", "TH", "THN"}
+	// replace
+	for _, w := range replaceWords {
+		c = strings.ReplaceAll(c, w, " ")
 	}
-
-	if c == "" && tmp != "" {
-		c = pkg.ProcessCity(tmp, u.Capitals)
-		tmp = ""
+	key := strings.TrimSpace(c)
+	if prov, ok := u.Capitals[key]; ok {
+		c = c + " " + strings.ToUpper(prov)
 	}
-	if tmp != "" {
-		n = strings.TrimSpace(strings.ToUpper(tmp))
-	}
-
-	// Clean Age
-	cleanAge := ""
-	for _, ch := range a {
-		if ch >= '0' && ch <= '9' {
-			cleanAge += string(ch)
-		}
-	}
-	a = cleanAge
-
 	// Format fixed-width
 	return fmt.Sprintf("%-30.30s", n),
 		fmt.Sprintf("%-3.3s", a),
