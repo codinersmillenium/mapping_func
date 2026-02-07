@@ -3,7 +3,7 @@
 
 ## running backend
   - go mod tidy
-  - run cmd/migrate
+  - go run cmd/migrate/main.go
   - go run cmd/server/main.go
 
 ## Running frontend
