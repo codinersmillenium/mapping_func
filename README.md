@@ -1,5 +1,5 @@
 # mapping_func
-# create database with mysql
+## create database with mysql
 
 ## running backend
   - go mod tidy
